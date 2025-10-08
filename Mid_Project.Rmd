@@ -2,7 +2,7 @@
 title: "Source Code"
 ---
 
-## Introduction Potato
+## Introduction
 
 This is my analysis of the World Happiness Report. First, I will show the original plot, followed by several redesigned versions that improve its clarity and impact.
 
