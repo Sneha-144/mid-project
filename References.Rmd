@@ -1,0 +1,23 @@
+---
+title: "References"
+---
+
+# References
+
+### Data Source
+
+* Helliwell, J. F., Layard, R., Sachs, J. D., De Neve, J.-E., Aknin, L. B., and Wang, S. (Eds.). (2024). World Happiness Report 2024. Sustainable Development Solutions Network. New York.
+
+### Software and R Packages
+
+* R Core Team (2025). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
+
+* Allaire, J. J., Xie, Y., Dervieux, C., McPherson, J., Luraschi, J., Ushey, K., and Iannone, R. (2025). rmarkdown: Dynamic Documents for R. R package version 2.25. URL https://rmarkdown.rstudio.com.
+
+* Wickham, H., et al. (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686. https://doi.org/10.21105/joss.01686.
+
+* Sievert, C. (2020). Interactive Web-Based Data Visualization with R, plotly, and shiny. Chapman and Hall/CRC. https://plotly-r.com.
+
+### Web Design
+
+* Park, T. (2025). Bootswatch: Free themes for Bootstrap. The "darkly" theme was used for this website. URL https://bootswatch.com/.

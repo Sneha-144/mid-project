@@ -1,0 +1,18 @@
+---
+title: "About Us"
+---
+
+Learn more about our background
+
+
+# Hi, I'm Sneha Srihari 
+
+### About me
+Hello! My name is Sneha Srihari. I am from Bengaluru, India. I am currently pursuing my Master's degree in Data Analytics and Engineering. This is my first semester at George Mason University. I have completed my Bachelor's in Electrical Engineering from PES University. I have also completed my MBA in Data Science and Analytics from Jain University. I have worked for 3.5 years at Ryzklytix Consulting Solutions as a Software Engineer.
+
+
+# Hi, I'm Sanchana Mohanraj
+
+### About me
+I completed my undergraduate degree in B.Tech in Electronics and Instrumentation Engineering (EIE) in India. During my undergraduate studies, I worked on a machine learning project that sparked my curiosity helped me build my foundational skills. I also completed the Integrated Business Analytics program from IIM Indore, where I learned to use Python, R, SQL, Tableau, Power BI and engaged in analytics-based projects that deepened my understanding of data and its applications.
+After my graduation, I worked as a Senior Systems Engineer at Infosys for three years, gaining valuable industry experience. This combined exposure has fueled my passion for data analytics, and I am excited to further develop my expertise and collaborate with everyone in the program. By heart I’m a sportsperson and I like hiking and playing volleyball and table tennis.

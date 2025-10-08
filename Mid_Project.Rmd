@@ -1,0 +1,270 @@
+---
+title: "Source Code"
+---
+
+## Introduction
+
+This is my analysis of the World Happiness Report. First, I will show the original plot, followed by several redesigned versions that improve its clarity and impact.
+
+------------------------------------------------------------------------
+
+### Setup: Loading Data and Libraries
+
+The Original Plot Below is the Original plot.
+
+```{r}
+# All your library() calls go here
+#library(tidyverse)
+
+# Your data loading code goes here
+# whr_data <- read_csv("World Happiness Report_org.csv")
+
+#The Original Plot Below is the Original plot.
+library(tidyverse)
+library(scales) 
+library(plotly)
+
+# Load the dataset (replace 'World Happiness Report.csv' with your file path if needed)
+df <- read.csv('World Happiness Report_org.csv')
+
+# Prepare data by selecting the latest year and renaming columns
+df_2020 =  df %>%
+  # Filter for the latest year (2020) where most data is available
+  filter(Year == 2020) %>%
+  # Select key columns and rename them for R use
+  select(
+    Country = Country.Name,
+    Region = Regional.Indicator,
+    Happiness = Life.Ladder,
+    GDP = Log.GDP.Per.Capita,
+    Support = Social.Support,
+    Health = Healthy.Life.Expectancy.At.Birth,
+    Freedom = Freedom.To.Make.Life.Choices,
+    Generosity = Generosity
+  ) %>%
+  # Remove rows with NA values in the key factors for a clean plot
+  drop_na() 
+
+# 2. Prepare Data for Stacking
+# Pivot the component factors into a long format for stacking
+df_stacked = df_2020 %>%
+  # Select only the components and Country
+  select(Country, GDP, Support, Health, Freedom, Generosity) %>%
+  pivot_longer(
+    cols = c(GDP, Support, Health, Freedom, Generosity),
+    names_to = "Factor",
+    values_to = "Score"
+  )
+
+# 3. Define Country Order (Alphabetical for Bad Plot)
+# The bad plot sorts alphabetically, destroying rank order
+df_stacked$Country = factor(df_stacked$Country, levels = sort(unique(df_stacked$Country)))
+
+# print(head(df_stacked))
+
+# 4. Plot the Bad Visualization (2D Stacked Column)
+bad_plot =  ggplot(df_stacked, aes(x = Country, y = Score, fill = Factor)) +
+  
+  # Flaw 1: Stacking scores that are not cumulative parts of a whole
+  geom_bar(stat = "identity", position = "stack") +
+  
+  # Flaw 2: Overcrowding on the X-axis (160+ countries)
+  # Flaw 3: Alphabetical sorting (destroys ranking)
+  
+  labs(
+    title = "The Original Bad Plot: Component Scores by Country (Alphabetical)",
+    subtitle = "Flaws: Overcrowding, misleading stacking, impossible comparison.",
+    x = "Country Name (Alphabetical Order)",
+    y = "Factor Score (Misleadingly Stacked)"
+  ) +
+  
+  # Flaw 4: Generic/Busy Color Palette (using default ggplot palette)
+  scale_fill_brewer(palette = "Set3") + 
+  
+  theme_minimal() +
+  theme(
+    # Flaw 5: Illegible X-axis text (angled and dense)
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 6),
+    legend.position = "bottom"
+  )
+
+#print(bad_plot)
+ggplotly(bad_plot)
+```
+
+Redesign 1
+
+```{r}
+# Redesign 1 
+world_map = map_data("world") %>% as_tibble() %>% rename(Country = region) 
+
+df_map_final <- left_join(world_map, df_2020, by = "Country")
+
+# 4. Create Choropleth Plot using geom_polygon
+redesign_1 <- ggplot(df_map_final, aes(x = long, y = lat, group = group)) +
+  
+  # Use geom_polygon to draw the map boundaries
+  geom_polygon(aes(fill = Happiness), 
+               color = "gray80", 
+               size = 0.1) +
+  
+  # Remove areas outside the standard map view (e.g., Antarctica)
+  coord_fixed(1.3) +
+  
+  scale_fill_viridis_c(
+    option = "plasma", 
+    direction = -1, 
+    na.value = "gray90", # Countries without a match will be gray
+    name = "Life Ladder Score"
+  ) +
+  
+  labs(
+    title = "Redesign 1: World Happiness Score Distribution (2020) - Legacy Map",
+    subtitle = "Map is created using base 'maps' package data (requires manual name matching).",
+    caption = "Country name mismatches will appear as gray."
+  ) +
+  
+  # Clean up map aesthetics
+  theme_void() + 
+  theme(legend.position = "bottom")
+
+ggplotly(redesign_1)
+```
+
+Redesign 2
+
+```{r}
+# Redesign 2 
+
+# Create Plot
+redesign_2 = ggplot(df_2020, aes(x = GDP, y = Happiness)) +
+  geom_point(aes(color = Region), alpha = 0.7, size = 3) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + # Add linear regression line (best fit)
+  labs(
+    title = "Redesign 2: Happiness Score vs. Log GDP Per Capita (2020)",
+    subtitle = "Reveals the strong linear relationship between wealth and happiness.",
+    x = "Log GDP Per Capita (Economic Measure)",
+    y = "Life Ladder (Happiness Score)",
+    color = "Region"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+#print(redesign_2)
+ggplotly(redesign_2)
+```
+
+Redesign 3
+
+```{r}
+#Redesign 3
+# Create Plot
+df_2020_clean <- df_2020 %>%
+  mutate(
+    Region = na_if(Region, ""),) %>%
+  drop_na(Region, Happiness)
+# Create Plot
+redesign_3 =  ggplot(df_2020_clean, aes(x = reorder(Region, Happiness, FUN=median), y = Happiness)) +
+  geom_boxplot(aes(fill = Region), alpha = 0.7, outlier.color = "red") +
+  geom_jitter(color = "black", size = 0.8, alpha = 0.5, width = 0.2) + # Add points for density
+  coord_flip() +
+  scale_y_continuous(
+    expand = expansion(mult = c(0.02, 0.05))
+  ) +
+  scale_x_discrete(
+    expand = expansion(add = 0.5),
+    labels = c(
+      "Commonwealth of Independent States" = "Commonwealth of \nIndependent States",
+      "Central and Eastern Europe" = "Central and \nEastern Europe",
+      "Latin America and Caribbean" = "Latin America \nand Caribbean",
+      "Middle East and North Africa" = "Middle East \nNorth Africa"
+    )
+  ) +
+  labs(
+    title = "Redesign 3: Distribution of Happiness Scores by Region",
+    subtitle = "Compares the median, interquartile range (IQR), and variability across regions.",
+    x = "Regional Indicator (Sorted by Median Happiness)",
+    y = "Life Ladder (Happiness Score)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(redesign_3)
+```
+
+Redesign 4
+
+```{r}
+# Redesign 4
+df_slope = df %>%
+  filter(Year %in% c(2018, 2020)) %>%
+  group_by(Year) %>%
+  # Calculate Rank based on Happiness Score for each year
+  mutate(Rank = rank(-Life.Ladder)) %>%
+  ungroup() %>%
+  # Select a few countries that represent different movements
+  filter(Country.Name %in% c("Finland", "United States", "India", "Venezuela","China", "Germany", "Japan", "Russia","South Africa"))
+
+# Create Plot
+redesign_4 = ggplot(df_slope, aes(x = as.factor(Year), y = Rank, group = Country.Name)) +
+  geom_line(aes(color = Country.Name), size = 1.5) +
+  geom_point(aes(color = Country.Name), size = 4) +
+  geom_text(data = filter(df_slope, Year == 2018), 
+            aes(label = paste(Country.Name, " ", Rank)), 
+            hjust = 1.1) +
+  geom_text(data = filter(df_slope, Year == 2020), 
+            aes(label = paste(Rank, " ", Country.Name)), 
+            hjust = -0.1) +
+  scale_y_reverse(breaks = seq(1, max(df_slope$Rank), 5)) + # Invert Y-axis so rank 1 is at the top
+  labs(
+    title = "Redesign 4: Change in Happiness Rank (2018 vs. 2020)",
+    subtitle = "Slope chart highlights stability and significant upward/downward movement.",
+    x = NULL,
+    y = "Happiness Rank (Higher is Better)"
+  ) +
+  theme_classic() +
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank())
+
+#print(redesign_4)
+ggplotly(redesign_4)
+```
+
+Redesign 5
+
+```{r}
+# Redesign 5 
+
+#install.packages("reshape2")
+library(reshape2)
+# 1. Select only the quantitative factor columns
+df_factors <- df_2020 %>%
+  select(Happiness, GDP, Support, Health, Freedom, Generosity)
+
+print(colnames(df_2020))
+# 2. Calculate the correlation matrix
+cor_matrix <- cor(df_factors, use = "complete.obs")
+
+# 3. Melt the matrix for ggplot (long format)
+df_cor <- melt(cor_matrix)
+
+# 4. Create Plot
+redesign_5 <- ggplot(df_cor, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "white") +
+  # Add the correlation value as text for precise reading
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) + 
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), name="Correlation") +
+  labs(
+    title = "Redesign 5: Correlation Heatmap of Happiness Factors",
+    subtitle = "Visualizes the linear relationship between every pair of happiness determinants."
+  ) +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#print(redesign_5)
+ggplotly(redesign_5)
+```

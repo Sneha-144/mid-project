@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Happiness Report - Redesign Analysis</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>World Happiness Report: Visualization Redesign</h1>
+        <p>Analyzing and Redesigning Visualizations from the World Happiness Report Data.</p>
+    </header>
+
+    <main>
+        <section id="scenarios-container">
+            <h2>Redesign Scenarios</h2>
+            <div id="scenarios-list">
+                <!-- Scenarios will be loaded here by JavaScript -->
+                Loading scenarios...
+            </div>
+        </section>
+
+        <section id="visualization-container">
+            <h2>Visualization Showcase</h2>
+            <div class="vis-description">
+                <h3 id="vis-title">Select a Scenario Above</h3>
+                <p id="vis-original"><strong>Original Plot Flaw:</strong></p>
+                <p id="vis-redesign"><strong>Redesign Goal:</strong></p>
+            </div>
+            <div id="plot-area" class="plot-placeholder">
+                <p>The interactive plot will appear here.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Data Visualization Project | Data from World Happiness Report</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+
+:root {
+    --bg-dark: #1f1f1f; /* Dark background, not pure black */
+    --bg-light: #2c2c2c; /* Slightly lighter background for cards/sections */
+    --text-light: #f0f0f0; /* Light text for readability */
+    --highlight-color: #4CAF50; /* A vibrant green for highlights/active state (inspired by the chart color) */
+    --secondary-color: #616161; /* Muted color for buttons/borders */
+    --button-hover: #5a5a5a;
+    --plot-bg: #3c3c3c; /* Background for the plot area */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+}
+
+header {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border-bottom: 3px solid var(--highlight-color);
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.8em;
+    color: var(--highlight-color); /* Highlight color for the main title */
+}
+
+main {
+    max-width: 1300px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+h2 {
+    color: var(--highlight-color);
+    border-bottom: 1px solid var(--secondary-color);
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+/* Content Card Styling */
+#scenarios-container, #visualization-container {
+    background-color: var(--bg-light);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+}
+
+/* Scenario Buttons */
+#scenarios-list {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.scenario-button {
+    background-color: var(--secondary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    font-size: 1em;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 180px;
+}
+
+.scenario-button:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-2px);
+}
+
+.scenario-button.active {
+    background-color: var(--highlight-color);
+    color: var(--bg-dark); /* Dark text on the bright button */
+    font-weight: bold;
+}
+
+/* Description Area */
+.vis-description {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: var(--plot-bg);
+}
+
+#vis-title {
+    color: var(--highlight-color);
+    font-size: 1.5em;
+    margin-top: 0;
+}
+
+#vis-original strong, #vis-redesign strong {
+    color: var(--highlight-color);
+    margin-right: 5px;
+}
+
+/* Plot Area */
+#plot-area {
+    width: 100%;
+    height: 650px; /* Slightly taller for better visualization */
+    margin-top: 20px;
+    background-color: var(--plot-bg); /* Dark background for the plot container */
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.plot-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: var(--plot-bg);
+    border-radius: 5px;
+    height: 100%;
+    color: var(--secondary-color);
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    color: var(--secondary-color);
+    font-size: 0.9em;
+    border-top: 1px solid var(--secondary-color);
+}

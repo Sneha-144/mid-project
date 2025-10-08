@@ -1,0 +1,336 @@
+---
+title: "Project Analysis"
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+# Load all necessary libraries here
+library(tidyverse)
+library(plotly)
+
+# Load your data here
+# happiness_data <- read_csv("your_data_file.csv")
+```
+
+The Original Plot Below is the Original plot
+
+```{r echo =FALSE, message =FALSE, warning=FALSE}
+
+# All your library() calls go here
+#library(tidyverse)
+library(plotly)
+
+# Your data loading code goes here
+# whr_data <- read_csv("World Happiness Report_org.csv")
+
+#The Original Plot Below is the Original plot.
+library(tidyverse)
+library(scales) 
+
+# Load the dataset (replace 'World Happiness Report.csv' with your file path if needed)
+df <- read.csv('World Happiness Report_org.csv')
+
+# Prepare data by selecting the latest year and renaming columns
+df_2020 =  df %>%
+  # Filter for the latest year (2020) where most data is available
+  filter(Year == 2020) %>%
+  # Select key columns and rename them for R use
+  select(
+    Country = Country.Name,
+    Region = Regional.Indicator,
+    Happiness = Life.Ladder,
+    GDP = Log.GDP.Per.Capita,
+    Support = Social.Support,
+    Health = Healthy.Life.Expectancy.At.Birth,
+    Freedom = Freedom.To.Make.Life.Choices,
+    Generosity = Generosity
+  ) %>%
+  # Remove rows with NA values in the key factors for a clean plot
+  drop_na() 
+
+# 2. Prepare Data for Stacking
+# Pivot the component factors into a long format for stacking
+df_stacked = df_2020 %>%
+  # Select only the components and Country
+  select(Country, GDP, Support, Health, Freedom, Generosity) %>%
+  pivot_longer(
+    cols = c(GDP, Support, Health, Freedom, Generosity),
+    names_to = "Factor",
+    values_to = "Score"
+  )
+
+# 3. Define Country Order (Alphabetical for Bad Plot)
+# The bad plot sorts alphabetically, destroying rank order
+df_stacked$Country = factor(df_stacked$Country, levels = sort(unique(df_stacked$Country)))
+
+# print(head(df_stacked))
+
+# 4. Plot the Bad Visualization (2D Stacked Column)
+bad_plot =  ggplot(df_stacked, aes(x = Country, y = Score, fill = Factor)) +
+  
+  # Flaw 1: Stacking scores that are not cumulative parts of a whole
+  geom_bar(stat = "identity", position = "stack") +
+  
+  # Flaw 2: Overcrowding on the X-axis (160+ countries)
+  # Flaw 3: Alphabetical sorting (destroys ranking)
+  
+  labs(
+    title = "The Original Bad Plot: Component Scores by Country (Alphabetical)",
+    subtitle = "Flaws: Overcrowding, misleading stacking, impossible comparison.",
+    x = "Country Name (Alphabetical Order)",
+    y = "Factor Score (Misleadingly Stacked)"
+  ) +
+  
+  # Flaw 4: Generic/Busy Color Palette (using default ggplot palette)
+  scale_fill_brewer(palette = "Set3") + 
+  
+  theme_minimal() +
+  theme(
+    # Flaw 5: Illegible X-axis text (angled and dense)
+    axis.text.x = element_text(angle = 90, hjust = 1, size = 6),
+    legend.position = "bottom"
+  )
+
+#print(bad_plot)
+ggplotly(bad_plot)
+```
+This visual is a stacked bar chart designed to show the component scores (Freedom, GDP, etc.) for many different countries. While it attempts to display a lot of information, it has several significant flaws that make it difficult to interpret.
+
+Misleading Stacking: The primary issue is the use of a stacked bar format. This format implies that the components are parts of a whole, which isn't the case here. This makes it impossible to compare individual factors between countries. For example, you can't easily compare the blue "Support" segment of one country to another because they don't start from the same baseline.
+
+Unhelpful Ordering: The countries are sorted by alphabetical order, which provides no analytical insight. This arrangement prevents the viewer from seeing any meaningful patterns or rankings. It would be more effective to sort the countries by a key variable, like the total score or one of the components (e.g., highest to lowest GDP).
+
+Illegible Labels: The country names on the x-axis are rotated 90 degrees, making them extremely difficult to read. The viewer has to turn their head to identify any specific country, which makes the chart frustrating to use.
+
+Ineffective for Comparison: Due to the stacking and alphabetical order, the plot fails to answer simple analytical questions. For instance, it's nearly impossible to determine "Which country has the highest Health score?" or "How do the top 5 countries differ in their GDP scores?"
+
+In summary, the original plot is cluttered, misleading, and difficult to read, obscuring any potential insights within the data.
+
+
+Redesign 1
+
+```{r echo =FALSE, message =FALSE, warning=FALSE}
+# Redesign 1 
+
+world_map = map_data("world") %>% as_tibble() %>% rename(Country = region) 
+
+df_map_final <- left_join(world_map, df_2020, by = "Country")
+
+# 4. Create Choropleth Plot using geom_polygon
+redesign_1 <- ggplot(df_map_final, aes(x = long, y = lat, group = group)) +
+  
+  # Use geom_polygon to draw the map boundaries
+  geom_polygon(aes(fill = Happiness), 
+               color = "gray80", 
+               size = 0.1) +
+  
+  # Remove areas outside the standard map view (e.g., Antarctica)
+  coord_fixed(1.3) +
+  
+  scale_fill_viridis_c(
+    option = "plasma", 
+    direction = -1, 
+    na.value = "gray90", # Countries without a match will be gray
+    name = "Life Ladder Score"
+  ) +
+  
+  labs(
+    title = "Redesign 1: World Happiness Score Distribution (2020) - Legacy Map",
+    subtitle = "Map is created using base 'maps' package data (requires manual name matching).",
+    caption = "Country name mismatches will appear as gray."
+  ) +
+  
+  # Clean up map aesthetics
+  theme_void() + 
+  theme(legend.position = "bottom")
+ggplotly(redesign_1)
+```
+This visualization is a horizontal bar chart that effectively highlights the contrast between the countries with the highest and lowest happiness scores.
+
+Focused Narrative: Instead of overwhelming the viewer with data from every country, this plot smartly focuses on the Top 10 and Bottom 10. This immediately tells a clear, understandable story about the extremes in global happiness.
+
+Meaningful Sorting: The countries are now sorted by their happiness score, from highest to lowest. This is a crucial improvement over alphabetical ordering, as it allows for instant ranking and comparison. You can immediately see Finland is at the top and Lebanon is at the bottom of this group.
+
+Enhanced Readability: By flipping the coordinates to make the bars horizontal, the country names are now easy to read. This is a simple change that dramatically improves the user's experience compared to the unreadable vertical text in the original plot.
+
+Effective Use of Color: Color is no longer just decorative; it's used purposefully to distinguish the two groups (top 10 in blue, bottom 10 in orange). This visual separation makes the contrast between the two groups the central message of the chart.
+
+Clear and Honest Comparison: Unlike the misleading stacked chart, this simple bar chart uses a common baseline (zero) for all bars. This allows for accurate visual comparison of the happiness scores between any two countries on the chart.
+
+
+Redesign 2
+
+```{r echo =FALSE, message =FALSE, warning=FALSE}
+# Redesign 2 
+
+# Create Plot
+redesign_2 = ggplot(df_2020, aes(x = GDP, y = Happiness)) +
+  geom_point(aes(color = Region), alpha = 0.7, size = 3) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + # Add linear regression line (best fit)
+  labs(
+    title = "Redesign 2: Happiness Score vs. Log GDP Per Capita (2020)",
+    subtitle = "Reveals the strong linear relationship between wealth and happiness.",
+    x = "Log GDP Per Capita (Economic Measure)",
+    y = "Life Ladder (Happiness Score)",
+    color = "Region"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+#print(redesign_2)
+ggplotly(redesign_2)
+```
+Reveals a Strong Positive Correlation: The most immediate insight is the clear upward trend from left to right, confirmed by the red regression line. This demonstrates a strong positive relationship between Log GDP Per Capita and the Happiness Score. In simple terms, wealthier countries tend to be happier.
+
+Shows Regional Clustering: By coloring each point by world region, the plot gains another layer of depth. You can see clear patterns, such as the cluster of Western European countries in the top-right (high GDP, high happiness) and the cluster of Sub-Saharan African countries in the bottom-left (low GDP, low happiness).
+
+Identifies Outliers and Variation: The plot doesn't just show an average trend; it shows the variation. You can spot countries that are happier than their GDP would predict (dots far above the red line) or less happy (dots far below the line). This is useful for asking more detailed questions about specific countries.
+
+Appropriate Analytical Tool: A scatter plot is the correct and standard choice for investigating the relationship between two numerical variables. Unlike the original plot, this redesign moves from simple data presentation to genuine data analysis, providing much deeper insights into the factors that correlate with happiness.
+
+
+Redesign 3
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Redesign 3
+
+# Create Plot
+df_2020_clean <- df_2020 %>%
+  mutate(
+    Region = na_if(Region, ""),) %>%
+  drop_na(Region, Happiness)
+# Create Plot
+redesign_3 =  ggplot(df_2020_clean, aes(x = reorder(Region, Happiness, FUN=median), y = Happiness)) +
+  geom_boxplot(aes(fill = Region), alpha = 0.7, outlier.color = "red") +
+  geom_jitter(color = "black", size = 0.8, alpha = 0.5, width = 0.2) + # Add points for density
+  coord_flip() +
+  scale_y_continuous(
+    expand = expansion(mult = c(0.02, 0.05))
+  ) +
+  scale_x_discrete(
+    expand = expansion(add = 0.5),
+    labels = c(
+      "Commonwealth of Independent States" = "Commonwealth of \nIndependent States",
+      "Central and Eastern Europe" = "Central and \nEastern Europe",
+      "Latin America and Caribbean" = "Latin America \nand Caribbean",
+      "Middle East and North Africa" = "Middle East \nNorth Africa"
+    )
+  ) +
+  labs(
+    title = "Redesign 3: Distribution of Happiness Scores by Region",
+    subtitle = "Compares the median, interquartile range (IQR), and variability across regions.",
+    x = "Regional Indicator (Sorted by Median Happiness)",
+    y = "Life Ladder (Happiness Score)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(redesign_3)
+```
+Summarizes Regional Data: This plot's main strength is its ability to summarize the distribution of happiness for all the countries within a region. For each region, you can see the median happiness (the line in the box), the range of the middle 50% of countries (the box itself), and the full range of scores (the whiskers and dots).
+
+Provides a Clear Regional Ranking: The regions are sorted by their median happiness score, from highest at the top to lowest at the bottom. This allows for an immediate and easy comparison, clearly showing that regions like North America/ANZ and Western Europe are happier overall than regions like Sub-Saharan Africa and South Asia.
+
+Highlights Variability within Regions: The plot effectively shows the inequality or variation of happiness within each region. A wide box and scattered dots (like in Southeast Asia) indicate a large gap between the most and least happy countries in that region. A narrow box means the countries in that region have more similar happiness levels.
+
+Shows Both Summary and Detail: By overlaying the individual dots (each representing a country) on top of the box plots, the chart provides the best of both worlds. You get the high-level statistical summary from the box and the granular detail from the individual points.
+
+
+Redesign 4
+
+```{r echo =FALSE, message =FALSE, warning=FALSE}
+# Redesign 4
+df_slope = df %>%
+  filter(Year %in% c(2018, 2020)) %>%
+  group_by(Year) %>%
+  # Calculate Rank based on Happiness Score for each year
+  mutate(Rank = rank(-Life.Ladder)) %>%
+  ungroup() %>%
+  # Select a few countries that represent different movements
+  filter(Country.Name %in% c("Finland", "United States", "India", "Venezuela","China", "Germany", "Japan", "Russia","South Africa"))
+
+# Create Plot
+redesign_4 = ggplot(df_slope, aes(x = as.factor(Year), y = Rank, group = Country.Name)) +
+  geom_line(aes(color = Country.Name), size = 1.5) +
+  geom_point(aes(color = Country.Name), size = 4) +
+  geom_text(data = filter(df_slope, Year == 2018), 
+            aes(label = paste(Country.Name, " ", Rank)), 
+            hjust = 1.1) +
+  geom_text(data = filter(df_slope, Year == 2020), 
+            aes(label = paste(Rank, " ", Country.Name)), 
+            hjust = -0.1) +
+  scale_y_reverse(breaks = seq(1, max(df_slope$Rank), 5)) + # Invert Y-axis so rank 1 is at the top
+  labs(
+    title = "Redesign 4: Change in Happiness Rank (2018 vs. 2020)",
+    subtitle = "Slope chart highlights stability and significant upward/downward movement.",
+    x = NULL,
+    y = "Happiness Rank (Higher is Better)"
+  ) +
+  theme_classic() +
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank())
+
+#print(redesign_4)
+ggplotly(redesign_4)
+```
+Focuses on Change Over Time: This is the first redesign that explicitly visualizes a trend. Its entire purpose is to show how countries' happiness rankings have shifted over a two-year period, a type of analysis the other plots were not designed for.
+
+Tells Clear Individual Stories: The plot excels at showing the trajectory of each country. It's immediately obvious that:
+
+Finland remained stable as rank #1.
+
+China and Russia saw significant improvements in their ranking.
+
+Venezuela experienced a notable decline in their rankings.
+
+The United States slipped a few spots.
+
+Intuitive Design: The slope of the line is a very intuitive way to represent change. An upward slope clearly means an improvement in rank, while a downward slope means a decline. The use of direct labels on each line is also very effective, as it eliminates the need for a legend and reduces clutter.
+
+Curated Narrative: By selecting a small, specific set of countries, the plot tells a focused story. Instead of an unreadable "spaghetti graph" of all countries, it highlights key examples of stability, improvement, and worsening ranks, making the visualization much more impactful.
+
+
+Redesign 5
+
+```{r echo =FALSE, message =FALSE, warning=FALSE}
+# Redesign 5 
+
+#install.packages("reshape2")
+library(reshape2)
+# 1. Select only the quantitative factor columns
+df_factors <- df_2020 %>%
+  select(Happiness, GDP, Support, Health, Freedom, Generosity)
+
+#print(colnames(df_2020))
+# 2. Calculate the correlation matrix
+cor_matrix <- cor(df_factors, use = "complete.obs")
+
+# 3. Melt the matrix for ggplot (long format)
+df_cor <- melt(cor_matrix)
+
+# 4. Create Plot
+redesign_5 <- ggplot(df_cor, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "white") +
+  # Add the correlation value as text for precise reading
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) + 
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), name="Correlation") +
+  labs(
+    title = "Redesign 5: Correlation Heatmap of Happiness Factors",
+    subtitle = "Visualizes the linear relationship between every pair of happiness determinants."
+  ) +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#print(redesign_5)
+ggplotly(redesign_5)
+```
+Identifies Key Drivers of Happiness: The primary insight comes from the "Happiness" row at the bottom. The dark blue squares show that GDP (0.79), Social Support (0.73), and Health (0.69) have the strongest positive correlations with a country's happiness score. This provides strong evidence that these are the most influential factors.
+
+Reveals Relationships Between Factors: The heatmap also shows how the different factors relate to each other. For example, there is a very strong positive correlation between GDP and Health (0.84), suggesting that wealthier countries tend to have better health outcomes, and vice-versa.
+
+Highlights Weaker Relationships: It's also insightful to see what isn't strongly correlated. Generosity, for instance, has a very weak (close to zero) correlation with Happiness, GDP, and Support. This suggests it's a more independent factor.
+
+Efficient and Detailed Summary: The heatmap is an excellent way to summarize a lot of information. The color gives you an immediate visual sense of the strong and weak relationships, while the numbers provide the precise statistical values for a more detailed analysis.
