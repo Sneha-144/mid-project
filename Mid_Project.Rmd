@@ -4,27 +4,22 @@ title: "Source Code"
 
 ## Introduction
 
-This is my analysis of the World Happiness Report. First, I will show the original plot, followed by several redesigned versions that improve its clarity and impact.
+This is our analysis of the World Happiness Report. First, we will show the original plot, followed by several redesigned versions that improve its clarity and impact.
 
 ------------------------------------------------------------------------
 
 ### Setup: Loading Data and Libraries
 
-The Original Plot Below is the Original plot.
+The Original Plot.
 
 ```{r}
 # All your library() calls go here
-#library(tidyverse)
 
-# Your data loading code goes here
-# whr_data <- read_csv("World Happiness Report_org.csv")
-
-#The Original Plot Below is the Original plot.
 library(tidyverse)
 library(scales) 
 library(plotly)
 
-# Load the dataset (replace 'World Happiness Report.csv' with your file path if needed)
+# Load the dataset
 df <- read.csv('World Happiness Report_org.csv')
 
 # Prepare data by selecting the latest year and renaming columns
@@ -56,7 +51,7 @@ df_stacked = df_2020 %>%
     values_to = "Score"
   )
 
-# 3. Define Country Order (Alphabetical for Bad Plot)
+# 3. Define Country Order
 # The bad plot sorts alphabetically, destroying rank order
 df_stacked$Country = factor(df_stacked$Country, levels = sort(unique(df_stacked$Country)))
 
@@ -96,31 +91,38 @@ Redesign 1
 
 ```{r}
 # Redesign 1 
+world_map = map_data("world") %>% as_tibble() %>% rename(Country = region) 
 
-# Filter for Top 10 and Bottom 10
-df_ranked = df_2020 %>%
-  arrange(desc(Happiness)) %>%
-  slice(1:10, (n()-9):n()) %>%
-  mutate(
-    Country = factor(Country, levels = Country[order(Happiness)]), # Order countries for plotting
-    Color_Group = ifelse(Happiness > median(Happiness), "Top", "Bottom")
-  )
+df_map_final <- left_join(world_map, df_2020, by = "Country")
 
-# Create Plot
-redesign_1 = ggplot(df_ranked, aes(x = Country, y = Happiness, fill = Color_Group)) +
-  geom_bar(stat = "identity") +
-  coord_flip() + # Flip for better readability of country names
-  scale_fill_manual(values = c("Top" = "#56B4E9", "Bottom" = "#E69F00")) + # Colorblind-friendly colors
-  labs(
-    title = "Redesign 1: Top 10 and Bottom 10 Happiest Countries (2020)",
-    subtitle = "Cleanly displays ranking, magnitude, and allows immediate comparison.",
-    y = "Life Ladder (Happiness Score)",
-    x = NULL
+# 4. Create Choropleth Plot using geom_polygon
+redesign_1 <- ggplot(df_map_final, aes(x = long, y = lat, group = group)) +
+  
+  # Use geom_polygon to draw the map boundaries
+  geom_polygon(aes(fill = Happiness), 
+               color = "gray80", 
+               size = 0.1) +
+  
+  # Remove areas outside the standard map view (e.g., Antarctica)
+  coord_fixed(1.3) +
+  
+  scale_fill_viridis_c(
+    option = "plasma", 
+    direction = -1, 
+    na.value = "gray90", # Countries without a match will be gray
+    name = "Life Ladder Score"
   ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+  
+  labs(
+    title = "Redesign 1: World Happiness Score Distribution (2020) - Legacy Map",
+    subtitle = "Map is created using base 'maps' package data (requires manual name matching).",
+    caption = "Country name mismatches will appear as gray."
+  ) +
+  
+  # Clean up map aesthetics
+  theme_void() + 
+  theme(legend.position = "bottom")
 
-#print(redesign_1)
 ggplotly(redesign_1)
 ```
 
@@ -149,28 +151,40 @@ ggplotly(redesign_2)
 
 Redesign 3
 
-```{r redesign-3, echo=FALSE, message=FALSE, warning=FALSE}
+```{r}
 #Redesign 3
 # Create Plot
-redesign_3 =  ggplot(df_2020, aes(x = reorder(Region, Happiness, FUN=median), y = Happiness)) +
+df_2020_clean <- df_2020 %>%
+  mutate(
+    Region = na_if(Region, ""),) %>%
+  drop_na(Region, Happiness)
+# Create Plot
+redesign_3 =  ggplot(df_2020_clean, aes(x = reorder(Region, Happiness, FUN=median), y = Happiness)) +
   geom_boxplot(aes(fill = Region), alpha = 0.7, outlier.color = "red") +
-  geom_jitter(color = "black", size = 0.8, alpha = 0.5, width = 0.2) +
+  geom_jitter(color = "black", size = 0.8, alpha = 0.5, width = 0.2) + # Add points for density
   coord_flip() +
+  scale_y_continuous(
+    expand = expansion(mult = c(0.02, 0.05))
+  ) +
+  scale_x_discrete(
+    expand = expansion(add = 0.5),
+    labels = c(
+      "Commonwealth of Independent States" = "Commonwealth of \nIndependent States",
+      "Central and Eastern Europe" = "Central and \nEastern Europe",
+      "Latin America and Caribbean" = "Latin America \nand Caribbean",
+      "Middle East and North Africa" = "Middle East \nNorth Africa"
+    )
+  ) +
   labs(
-    title = "Redesign 3: Distribution of Happiness Scores by Region (Box Plot)",
+    title = "Redesign 3: Distribution of Happiness Scores by Region",
     subtitle = "Compares the median, interquartile range (IQR), and variability across regions.",
     x = "Regional Indicator (Sorted by Median Happiness)",
     y = "Life Ladder (Happiness Score)"
   ) +
   theme_minimal() +
-  theme(
-    legend.position = "none",
-    # ADD THIS LINE to create more space at the bottom
-    plot.margin = margin(5, 5, 50, 5)
-  )
+  theme(legend.position = "none")
 
-# Convert to plotly, keeping the height argument as well
-ggplotly(redesign_3, height = 500)
+ggplotly(redesign_3)
 ```
 
 Redesign 4
