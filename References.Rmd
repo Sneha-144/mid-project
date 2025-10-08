@@ -2,8 +2,6 @@
 title: "References"
 ---
 
-# References
-
 ### Data Source
 
 * Helliwell, J. F., Layard, R., Sachs, J. D., De Neve, J.-E., Aknin, L. B., and Wang, S. (Eds.). (2024). World Happiness Report 2024. Sustainable Development Solutions Network. New York.
